@@ -10,11 +10,10 @@ shape = [1]+out_size+[1]
 nx = 2
 ny = 2
 
+# Z ordering
 v = np.array([
-  [0.2, 0.2],
-  [0.4, 0.4],
-  [0.6, 0.6],
-  [0.8, 0.8]])
+  [-1, -1],[1, -1],
+  [-1, 1],[1, 1]])
 
 p = tf.constant(v.reshape([1, nx*ny, 2]), dtype=tf.float32)
 t_img = tf.constant(img.reshape(shape), dtype=tf.float32)

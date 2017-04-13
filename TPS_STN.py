@@ -145,16 +145,11 @@ def TPS_STN(U, nx, ny, cp, out_size):
         return output
 
     def _solve_system(cp, nx, ny):
-        gx = 2. / nx # grid x size
-        gy = 2. / ny # grid y size
-        cx = -1. + gx/2. # x coordinate
-        cy = -1. + gy/2. # y coordinate
-
-        X, Y = np.meshgrid(np.arange(cx, 1., gx), np.arange(cy, 1., gy), indexing='xy')
+        X, Y = np.meshgrid(np.linspace(-1.,1.,nx), np.linspace(-1.,1.,ny), indexing='xy')
         p_ = np.stack([np.ones((nx*ny,)), X.flatten(), Y.flatten()], 1)
 
-        p_1 = p_.reshape([nx*ny,1,3])
-        p_2 = p_.reshape([1, nx*ny, 3])
+        p_1 = p_.reshape([nx*ny,1,3])[...,1:]
+        p_2 = p_.reshape([1,nx*ny,3])[...,1:]
         d = np.sqrt(np.sum((p_1-p_2)**2, 2)) # [nx*ny, nx*ny]
         r = d*d*np.log(d*d+1e-5)
         W = np.zeros([nx*ny+3, nx*ny+3], dtype='float32')
@@ -172,7 +167,7 @@ def TPS_STN(U, nx, ny, cp, out_size):
         W_inv_t = tf.expand_dims(W_inv_t, 0)          # [1, nx*ny+3, nx*ny+3]
         W_inv_t = tf.tile(W_inv_t, tf.stack([num_batch, 1, 1]))
 
-        cp_pad = tf.pad(cp+fp, [[0, 0], [0, 3], [0, 0]], "CONSTANT")
+        cp_pad = tf.pad(cp, [[0, 0], [0, 3], [0, 0]], "CONSTANT")
         T = tf.matmul(W_inv_t, cp_pad)
         T = tf.transpose(T, [0,2,1])
 
