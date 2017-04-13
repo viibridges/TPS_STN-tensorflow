@@ -50,15 +50,18 @@ def TPS_STN(U, nx, ny, cp, out_size):
         y = (y + 1.0)*(height_f) / 2.0
 
         # do sampling
-        x0 = tf.cast(tf.floor(x), 'int32')
-        x1 = x0 + 1
-        y0 = tf.cast(tf.floor(y), 'int32')
-        y1 = y0 + 1
+        x0_f = tf.floor(x); x1_f = x0_f + 1.
+        y0_f = tf.floor(y); y1_f = y0_f + 1.
 
+        x0 = tf.cast(x0_f, 'int32')
         x0 = tf.clip_by_value(x0, zero, max_x)
+        x1 = tf.cast(x1_f, 'int32')
         x1 = tf.clip_by_value(x1, zero, max_x)
+        y0 = tf.cast(y0_f, 'int32')
         y0 = tf.clip_by_value(y0, zero, max_y)
+        y1 = tf.cast(y1_f, 'int32')
         y1 = tf.clip_by_value(y1, zero, max_y)
+
         dim2 = width
         dim1 = width*height
         base = _repeat(tf.range(num_batch)*dim1, out_height*out_width)
@@ -79,14 +82,11 @@ def TPS_STN(U, nx, ny, cp, out_size):
         Id = tf.gather(im_flat, idx_d)
 
         # and finally calculate interpolated values
-        x0_f = tf.cast(x0, 'float32')
-        x1_f = tf.cast(x1, 'float32')
-        y0_f = tf.cast(y0, 'float32')
-        y1_f = tf.cast(y1, 'float32')
-        wa = tf.expand_dims(((x1_f-x) * (y1_f-y)), 1)
-        wb = tf.expand_dims(((x1_f-x) * (y-y0_f)), 1)
-        wc = tf.expand_dims(((x-x0_f) * (y1_f-y)), 1)
-        wd = tf.expand_dims(((x-x0_f) * (y-y0_f)), 1)
+        wa = tf.expand_dims(((1-x+x0_f) * (1-y+y0_f)), 1)
+        wb = tf.expand_dims(((1-x+x0_f) * (1-y1_f+y)), 1)
+        wc = tf.expand_dims(((1-x1_f+x) * (1-y+y0_f)), 1)
+        wd = tf.expand_dims(((1-x1_f+x) * (1-y1_f+y)), 1)
+
         output = tf.add_n([wa*Ia, wb*Ib, wc*Ic, wd*Id])
         return output
 
