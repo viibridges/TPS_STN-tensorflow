@@ -42,24 +42,24 @@ def TPS_STN(U, nx, ny, cp, out_size):
         out_height = out_size[0]
         out_width = out_size[1]
         zero = tf.zeros([], dtype='int32')
-        max_y = tf.cast(tf.shape(im)[1] - 1, 'int32')
-        max_x = tf.cast(tf.shape(im)[2] - 1, 'int32')
+        max_y = tf.cast(height - 1, 'int32')
+        max_x = tf.cast(width - 1, 'int32')
 
         # scale indices from [-1, 1] to [0, width/height]
-        x = (x + 1.0)*(width_f) / 2.0
-        y = (y + 1.0)*(height_f) / 2.0
+        x = (x + 1.0)*(width_f-1) / 2.0
+        y = (y + 1.0)*(height_f-1) / 2.0
 
         # do sampling
         x0_f = tf.floor(x); x1_f = x0_f + 1.
         y0_f = tf.floor(y); y1_f = y0_f + 1.
 
         x0 = tf.cast(x0_f, 'int32')
-        x0 = tf.clip_by_value(x0, zero, max_x)
         x1 = tf.cast(x1_f, 'int32')
-        x1 = tf.clip_by_value(x1, zero, max_x)
         y0 = tf.cast(y0_f, 'int32')
-        y0 = tf.clip_by_value(y0, zero, max_y)
         y1 = tf.cast(y1_f, 'int32')
+        x0 = tf.clip_by_value(x0, zero, max_x)
+        x1 = tf.clip_by_value(x1, zero, max_x)
+        y0 = tf.clip_by_value(y0, zero, max_y)
         y1 = tf.clip_by_value(y1, zero, max_y)
 
         dim2 = width
@@ -81,7 +81,6 @@ def TPS_STN(U, nx, ny, cp, out_size):
         Ic = tf.gather(im_flat, idx_c)
         Id = tf.gather(im_flat, idx_d)
 
-        # and finally calculate interpolated values
         wa = tf.expand_dims(((1-x+x0_f) * (1-y+y0_f)), 1)
         wb = tf.expand_dims(((1-x+x0_f) * (1-y1_f+y)), 1)
         wc = tf.expand_dims(((1-x1_f+x) * (1-y+y0_f)), 1)
